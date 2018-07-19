@@ -41,10 +41,12 @@
 
 GPSDriverAshtech::GPSDriverAshtech(GPSCallbackPtr callback, void *callback_user,
 				   struct vehicle_gps_position_s *gps_position,
-				   struct satellite_info_s *satellite_info) :
+				   struct satellite_info_s *satellite_info,
+				   struct vehicle_gps_yaw_s *gps_yaw) :
 	GPSHelper(callback, callback_user),
 	_satellite_info(satellite_info),
-	_gps_position(gps_position)
+	_gps_position(gps_position),
+	_gps_yaw(gps_yaw)
 {
 	decodeInit();
 	_decode_state = NME_DECODE_UNINIT;
@@ -74,6 +76,7 @@ int GPSDriverAshtech::handleMessage(int len)
 	int ret = 0;
 
 	if ((memcmp(_rx_buffer + 3, "ZDA,", 3) == 0) && (uiCalcComma == 6)) {
+		PX4_INFO("ZDA, %ld", hrt_absolute_time());
 		/*
 		UTC day, month, and year, and local time zone offset
 		An example of the ZDA message string is:
@@ -156,6 +159,8 @@ int GPSDriverAshtech::handleMessage(int len)
 	}
 
 	else if ((memcmp(_rx_buffer + 3, "GGA,", 3) == 0) && (uiCalcComma == 14) && !_got_pashr_pos_message) {
+		PX4_INFO("GGA, %ld", hrt_absolute_time());
+
 		/*
 		  Time, position, and fix related data
 		  An example of the GBS message string is:
@@ -260,6 +265,7 @@ int GPSDriverAshtech::handleMessage(int len)
 
 	} else if ((memcmp(_rx_buffer, "$PASHR,POS,", 11) == 0) && (uiCalcComma == 18)) {
 		_got_pashr_pos_message = true;
+		PX4_INFO("PASHR,%lld", hrt_absolute_time());
 		/*
 		Example $PASHR,POS,2,10,125410.00,5525.8138702,N,03833.9587380,E,131.555,1.0,0.0,0.007,-0.001,2.0,1.0,1.7,1.0,*34
 
@@ -398,6 +404,7 @@ int GPSDriverAshtech::handleMessage(int len)
 		ret = 1;
 
 	} else if ((memcmp(_rx_buffer + 3, "GST,", 3) == 0) && (uiCalcComma == 8)) {
+		PX4_INFO("GST %lld", hrt_absolute_time());
 		/*
 		  Position error statistics
 		  An example of the GST message string is:
@@ -449,6 +456,7 @@ int GPSDriverAshtech::handleMessage(int len)
 		_gps_position->s_variance_m_s = 0;
 
 	} else if ((memcmp(_rx_buffer + 3, "GSV,", 3) == 0)) {
+		PX4_INFO("GSV %lld", hrt_absolute_time());
 		/*
 		  The GSV message string identifies the number of SVs in view, the PRN numbers, elevations, azimuths, and SNR values. An example of the GSV message string is:
 
@@ -538,6 +546,13 @@ int GPSDriverAshtech::handleMessage(int len)
 				_satellite_info->azimuth[y + (this_msg_num - 1) * 4]   = sat[y].azimuth;
 			}
 		}
+	} else if ((memcmp(_rx_buffer + 3), "HDT,", 3) == 0 && (uiCalcComma == 2)) {
+		double yaw = 0.0f;
+		if (bufptr && *(++bufptr) != ',') { yaw = strtod(bufptr, &endp); }
+		_gps_yaw.timestamp = hrt_absolute_time();
+		_gps_yaw.yaw = yaw;
+		ret = 4;
+
 	}
 
 	if (ret > 0) {

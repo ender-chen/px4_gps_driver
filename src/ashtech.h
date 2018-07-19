@@ -73,6 +73,7 @@ private:
 	};
 
 	struct satellite_info_s *_satellite_info {nullptr};
+	struct vehicle_gps_yaw_s *_gps_yaw {nullptr};
 	struct vehicle_gps_position_s *_gps_position {nullptr};
 	uint64_t _last_timestamp_time{0};
 	int _ashtechlog_fd{-1};
