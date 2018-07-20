@@ -47,7 +47,7 @@ class GPSDriverAshtech : public GPSHelper
 {
 public:
 	GPSDriverAshtech(GPSCallbackPtr callback, void *callback_user, struct vehicle_gps_position_s *gps_position,
-			 struct satellite_info_s *satellite_info);
+			 struct satellite_info_s *satellite_info, struct vehicle_gps_yaw_s *gps_yaw);
 	virtual ~GPSDriverAshtech() = default;
 
 	int receive(unsigned timeout);
@@ -73,8 +73,8 @@ private:
 	};
 
 	struct satellite_info_s *_satellite_info {nullptr};
-	struct vehicle_gps_yaw_s *_gps_yaw {nullptr};
 	struct vehicle_gps_position_s *_gps_position {nullptr};
+	struct vehicle_gps_yaw_s *_gps_yaw {nullptr};
 	uint64_t _last_timestamp_time{0};
 	int _ashtechlog_fd{-1};
 

@@ -546,11 +546,11 @@ int GPSDriverAshtech::handleMessage(int len)
 				_satellite_info->azimuth[y + (this_msg_num - 1) * 4]   = sat[y].azimuth;
 			}
 		}
-	} else if ((memcmp(_rx_buffer + 3), "HDT,", 3) == 0 && (uiCalcComma == 2)) {
+	} else if ((memcmp((_rx_buffer + 3), "HDT", 3) == 0) && (uiCalcComma == 2)) {
 		double yaw = 0.0f;
 		if (bufptr && *(++bufptr) != ',') { yaw = strtod(bufptr, &endp); }
-		_gps_yaw.timestamp = hrt_absolute_time();
-		_gps_yaw.yaw = yaw;
+		_gps_yaw->timestamp = hrt_absolute_time();
+		_gps_yaw->yaw = yaw;
 		ret = 4;
 
 	}
